@@ -1,7 +1,7 @@
 # coding: utf-8
 from rnnmath import *
 from model import Model, is_param, is_delta
-
+import numpy as np
 class RNN(Model):
 	'''
 	This class implements Recurrent Neural Networks.
@@ -20,9 +20,7 @@ class RNN(Model):
 	def __init__(self, vocab_size, hidden_dims, out_vocab_size):
 		'''
 		initialize the RNN with random weight matrices.
-		
 		DO NOT CHANGE THIS - The order of the parameters is important and must stay the same.
-		
 		vocab_size		size of vocabulary that is being used
 		hidden_dims		number of hidden units
 		out_vocab_size	size of the output vocabulary
@@ -42,30 +40,27 @@ class RNN(Model):
 			self.deltaV = np.zeros_like(self.V)
 			self.deltaW = np.zeros_like(self.W)
 
-	def predict(self, x):
+	def predict(self, x): #hidden to output
 		'''
 		predict an output sequence y for a given input sequence x
-		
 		x	list of words, as indices, e.g.: [0, 4, 2]
-		
 		returns	y,s
 		y	matrix of probability vectors for each input word
 		s	matrix of hidden layers for each input word
-		
 		'''
-		
 		# matrix s for hidden states, y for output states, given input x.
-		# rows correspond to times t, i.e., input words
-		# s has one more row, since we need to look back even at time 0 (s(t=0-1) will just be [0. 0. ....] )
+		#V , weight matrix , maps input to hidden layer , 
+		# W - Weight matrix hidden -> output
+		# U - weight matrix prev hidden -> curr hidden 
+		o = np.zeros(len)
 		s = np.zeros((len(x) + 1, self.hidden_dims))
 		y = np.zeros((len(x), self.out_vocab_size))
-
-		for t in range(len(x)):
-			##########################
-			# --- your code here --- #
-			##########################
-
-
+		#initialisation , there is no initial hidden layer 
+		x[0] = x[0]@self.V[0]   # multiply input by initial weights , 
+		s[0]=np.maximum(0,x[0]) #apply RELU activation to get first hidden layer 
+		o[0] =s[0]@self.W[0]	#multiply first hidden layer by corresponding output weight	
+		for y in range 			
+		
 		return y, s
 	
 	def acc_deltas(self, x, d, y, s):
