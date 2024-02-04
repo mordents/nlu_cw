@@ -2,7 +2,6 @@
 import math
 
 import numpy as np
-import torch
 from model import Model, is_delta, is_param
 from rnnmath import *
 
@@ -58,19 +57,21 @@ class RNN(Model):
         # s has one more row, since we need to look back even at time 0 (s(t=0-1) will just be [0. 0. ....] )
         s = np.zeros((len(x) + 1, self.hidden_dims))
         y = np.zeros((len(x), self.out_vocab_size))
-        x_onehot = np.zeros(
-            (len(x), self.vocab_size)
-        )  # empty matrix to hold onehot encodings size num rows input words col vocab size
-        x_onehot[np.arange(len(x)), x] = 1  # set column vals to 1
-        print(f"weight matrix shape is {self.V.shape}")
-        print(f"onehot shape is {x_onehot[0].shape}")
         for t in range(len(x)):
-            net_in = np.matmul(self.V, x_onehot[t].reshape(self.vocab_size, 1))
-            print(net_in)
-            # print(math.tanh(x[t] + s[t - 1]))
-
-        y = np.exp(x) / np.sum(np.exp(x), axis=0)  # softmax function
-
+            # net_in = np.matmul(self.V, x_onehot[t].reshape(self.vocab_size, 1))
+            Vx = np.matmul(self.V, make_onehot(x[t], self.vocab_size)).reshape(
+                len(x), 1
+            )
+            # print(f"U shape: {self.U.shape}, s[t-1] shape: {s[t].shape}")
+            Us = np.matmul(self.U, s[t].reshape(len(x), 1))
+            # print(f"Vx is: {Vx.shape}, Us is: {Us.shape}")
+            # print(f"Netin shape: {np.add(Vx, Us).shape}")
+            s[t + 1] = np.squeeze(sigmoid(np.add(Vx, Us)))
+            # print(f"s[t] shape is: {s[t+1].shape}, w shape is: {self.W.shape}")
+            netout = np.matmul(self.W, s[t + 1])
+            # print(netout.shape)
+            y[t] = softmax(netout)
+            # math.tanh(net_in + plus)
         return y, s
 
     def acc_deltas(self, x, d, y, s):
