@@ -58,11 +58,16 @@ class RNN(Model):
         # s has one more row, since we need to look back even at time 0 (s(t=0-1) will just be [0. 0. ....] )
         s = np.zeros((len(x) + 1, self.hidden_dims))
         y = np.zeros((len(x), self.out_vocab_size))
-        print(self.V.shape)
-        # x.shape()
+        x_onehot = np.zeros(
+            (len(x), self.vocab_size)
+        )  # empty matrix to hold onehot encodings size num rows input words col vocab size
+        x_onehot[np.arange(len(x)), x] = 1  # set column vals to 1
+        print(f"weight matrix shape is {self.V.shape}")
+        print(f"onehot shape is {x_onehot[0].shape}")
         for t in range(len(x)):
-            x[t] @ self.V[t]
-            print(math.tanh(x[t] + s[t - 1]))
+            net_in = np.matmul(self.V, x_onehot[t].reshape(self.vocab_size, 1))
+            print(net_in)
+            # print(math.tanh(x[t] + s[t - 1]))
 
         y = np.exp(x) / np.sum(np.exp(x), axis=0)  # softmax function
 
@@ -154,5 +159,5 @@ class RNN(Model):
 
 
 if __name__ == "__main__":
-    mymodel = RNN(3, 3, 3)
-    mymodel.predict([2, 3, 9])
+    mymodel = RNN(vocab_size=5, hidden_dims=3, out_vocab_size=4)
+    mymodel.predict([0, 2, 4])
