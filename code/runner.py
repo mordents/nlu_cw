@@ -1,35 +1,35 @@
 # coding: utf-8
 import sys
 import time
-
-from utils import *
-from rnnmath import *
 from sys import stdout
+
+from gru import GRU
 from model import Model
 from rnn import RNN
-from gru import GRU
+from rnnmath import *
+from utils import *
 
 
 class Runner(object):
-    '''
+    """
     This class implements the training loop for a Model (either an RNN or a GRU).
     Parameters such as hidden_size can be accessed via the model.
 
     You should implement code in the following functions:
-    	compute_loss 		->	compute the (cross entropy) loss between the desired output and predicted output for a given input sequence
-    	compute_loss_np     ->  compute the loss between the desired output and predicted output for a given input sequence for the number prediction task
-    	compute_mean_loss	->	compute the average loss over all sequences in a corpus
-    	compute_acc_np      ->  compute the
+        compute_loss 		->	compute the (cross entropy) loss between the desired output and predicted output for a given input sequence
+        compute_loss_np     ->  compute the loss between the desired output and predicted output for a given input sequence for the number prediction task
+        compute_mean_loss	->	compute the average loss over all sequences in a corpus
+        compute_acc_np      ->  compute the
 
     Do NOT modify any other methods!
     Do NOT change any method signatures!
-    '''
+    """
 
     def __init__(self, model: Model):
         self.model = model
 
     def compute_loss(self, x, d):
-        '''
+        """
         compute the loss between predictions y for x, and desired output d.
 
         first predicts the output for x using the Model, then computes the loss w.r.t. d
@@ -38,18 +38,16 @@ class Runner(object):
         d		list of words, as indices, e.g.: [4, 2, 3]
 
         return loss		the combined loss for all words
-        '''
+        """
+        loss = 0.0
+        y = self.model.predict(x)
+        for t in range(len(d)):
+            loss2 = -(sum(d[t]) * np.log(y[t]))
 
-        loss = 0.
-
-        ##########################
-        # --- your code here --- #
-        ##########################
-
-        return loss
+        return loss2
 
     def compute_loss_np(self, x, d):
-        '''
+        """
         compute the loss between predictions y for x, and desired output d.
 
         first predicts the output for x using the RNN, then computes the loss w.r.t. d
@@ -58,9 +56,9 @@ class Runner(object):
         d		a word, as indices, e.g.: [0]
 
         return loss		we only take the prediction from the last time step
-        '''
+        """
 
-        loss = 0.
+        loss = 0.0
 
         ##########################
         # --- your code here --- #
@@ -69,7 +67,7 @@ class Runner(object):
         return loss
 
     def compute_acc_np(self, x, d):
-        '''
+        """
         compute the accuracy prediction, y[t] compared to the desired output d.
         first predicts the output for x using the RNN, then computes the loss w.r.t. d
 
@@ -77,7 +75,7 @@ class Runner(object):
         d		a word class (plural/singular), as index, e.g.: [0] or [1]
 
         return 1 if argmax(y[t]) == d[0], 0 otherwise
-        '''
+        """
 
         ##########################
         # --- your code here --- #
@@ -86,16 +84,15 @@ class Runner(object):
         return 0
 
     def compute_mean_loss(self, X, D):
-        '''
+        """
         compute the mean loss between predictions for corpus X and desired outputs in corpus D.
 
         X		corpus of sentences x1, x2, x3, [...], each a list of words as indices.
         D		corpus of desired outputs d1, d2, d3 [...], each a list of words as indices.
 
         return mean_loss		average loss over all words in D
-        '''
-
-        mean_loss = 0.
+        """
+        mean_loss = 0.0
 
         ##########################
         # --- your code here --- #
@@ -103,9 +100,21 @@ class Runner(object):
 
         return mean_loss
 
-    def train(self, X, D, X_dev, D_dev, epochs=10, learning_rate=0.5, anneal=5, back_steps=0, batch_size=100,
-              min_change=0.0001, log=True):
-        '''
+    def train(
+        self,
+        X,
+        D,
+        X_dev,
+        D_dev,
+        epochs=10,
+        learning_rate=0.5,
+        anneal=5,
+        back_steps=0,
+        batch_size=100,
+        min_change=0.0001,
+        log=True,
+    ):
+        """
         train the model on some training set X, D while optimizing the loss on a dev set X_dev, D_dev
 
         DO NOT CHANGE THIS
@@ -132,15 +141,25 @@ class Runner(object):
                         number of epochs left.
                         default 0.0001
         log				whether or not to print out log messages. (default log=True)
-        '''
+        """
         if log:
             stdout.write(
-                "\nTraining model for {0} epochs\ntraining set: {1} sentences (batch size {2})".format(epochs, len(X),
-                                                                                                       batch_size))
+                "\nTraining model for {0} epochs\ntraining set: {1} sentences (batch size {2})".format(
+                    epochs, len(X), batch_size
+                )
+            )
             stdout.write("\nOptimizing loss on {0} sentences".format(len(X_dev)))
-            stdout.write("\nVocab size: {0}\nHidden units: {1}".format(self.model.vocab_size, self.model.hidden_dims))
+            stdout.write(
+                "\nVocab size: {0}\nHidden units: {1}".format(
+                    self.model.vocab_size, self.model.hidden_dims
+                )
+            )
             stdout.write("\nSteps for back propagation: {0}".format(back_steps))
-            stdout.write("\nInitial learning rate set to {0}, annealing set to {1}".format(learning_rate, anneal))
+            stdout.write(
+                "\nInitial learning rate set to {0}, annealing set to {1}".format(
+                    learning_rate, anneal
+                )
+            )
             stdout.write("\n\ncalculating initial mean loss on dev set")
             stdout.flush()
 
@@ -148,7 +167,10 @@ class Runner(object):
         loss_function = self.compute_loss
 
         loss_sum = sum([len(d) for d in D_dev])
-        initial_loss = sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / loss_sum
+        initial_loss = (
+            sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))])
+            / loss_sum
+        )
 
         if log or not log:
             stdout.write(": {0}\n".format(initial_loss))
@@ -171,7 +193,9 @@ class Runner(object):
                 learning_rate = a0
 
             if log:
-                stdout.write("\nepoch %d, learning rate %.04f" % (epoch + 1, learning_rate))
+                stdout.write(
+                    "\nepoch %d, learning rate %.04f" % (epoch + 1, learning_rate)
+                )
                 stdout.flush()
 
             t0 = time.time()
@@ -206,7 +230,10 @@ class Runner(object):
                 self.model.scale_gradients_for_batch(mod)
                 self.model.apply_deltas(learning_rate)
 
-            loss = sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / loss_sum
+            loss = (
+                sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))])
+                / loss_sum
+            )
 
             if log:
                 stdout.write("\tepoch done in %.02f seconds" % (time.time() - t0))
@@ -224,7 +251,11 @@ class Runner(object):
             else:
                 min_change_count = 0
             if min_change_count > 2:
-                print("\n\ntraining finished after {0} epochs due to minimal change in loss".format(epoch + 1))
+                print(
+                    "\n\ntraining finished after {0} epochs due to minimal change in loss".format(
+                        epoch + 1
+                    )
+                )
                 break
 
             prev_loss = loss
@@ -232,17 +263,37 @@ class Runner(object):
         t = time.time() - t_start
 
         if min_change_count <= 2:
-            print("\n\ntraining finished after reaching maximum of {0} epochs".format(epochs))
-        print("best observed loss was {0}, at epoch {1}".format(best_loss, (best_epoch + 1)))
+            print(
+                "\n\ntraining finished after reaching maximum of {0} epochs".format(
+                    epochs
+                )
+            )
+        print(
+            "best observed loss was {0}, at epoch {1}".format(
+                best_loss, (best_epoch + 1)
+            )
+        )
 
         print("setting parameters to matrices from best epoch")
         self.model.set_best_params()
 
         return best_loss
 
-    def train_np(self, X, D, X_dev, D_dev, epochs=10, learning_rate=0.5, anneal=5, back_steps=0, batch_size=100,
-                 min_change=0.0001, log=True):
-        '''
+    def train_np(
+        self,
+        X,
+        D,
+        X_dev,
+        D_dev,
+        epochs=10,
+        learning_rate=0.5,
+        anneal=5,
+        back_steps=0,
+        batch_size=100,
+        min_change=0.0001,
+        log=True,
+    ):
+        """
         train the model on some training set X, D while optimizing the loss on a dev set X_dev, D_dev
 
         DO NOT CHANGE THIS
@@ -269,23 +320,38 @@ class Runner(object):
                         number of epochs left.
                         default 0.0001
         log				whether or not to print out log messages. (default log=True)
-        '''
+        """
         if log:
             stdout.write(
-                "\nTraining model for {0} epochs\ntraining set: {1} sentences (batch size {2})".format(epochs, len(X),
-                                                                                                       batch_size))
+                "\nTraining model for {0} epochs\ntraining set: {1} sentences (batch size {2})".format(
+                    epochs, len(X), batch_size
+                )
+            )
             stdout.write("\nOptimizing loss on {0} sentences".format(len(X_dev)))
-            stdout.write("\nVocab size: {0}\nHidden units: {1}".format(self.model.vocab_size, self.model.hidden_dims))
+            stdout.write(
+                "\nVocab size: {0}\nHidden units: {1}".format(
+                    self.model.vocab_size, self.model.hidden_dims
+                )
+            )
             stdout.write("\nSteps for back propagation: {0}".format(back_steps))
-            stdout.write("\nInitial learning rate set to {0}, annealing set to {1}".format(learning_rate, anneal))
+            stdout.write(
+                "\nInitial learning rate set to {0}, annealing set to {1}".format(
+                    learning_rate, anneal
+                )
+            )
             stdout.flush()
 
         t_start = time.time()
         loss_function = self.compute_loss_np
 
         loss_sum = len(D_dev)
-        initial_loss = sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / loss_sum
-        initial_acc = sum([self.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+        initial_loss = (
+            sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))])
+            / loss_sum
+        )
+        initial_acc = sum(
+            [self.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]
+        ) / len(X_dev)
 
         if log or not log:
             stdout.write("\n\ncalculating initial mean loss on dev set")
@@ -311,7 +377,9 @@ class Runner(object):
                 learning_rate = a0
 
             if log:
-                stdout.write("\nepoch %d, learning rate %.04f" % (epoch + 1, learning_rate))
+                stdout.write(
+                    "\nepoch %d, learning rate %.04f" % (epoch + 1, learning_rate)
+                )
                 stdout.flush()
 
             t0 = time.time()
@@ -346,8 +414,13 @@ class Runner(object):
                 self.model.scale_gradients_for_batch(mod)
                 self.model.apply_deltas(learning_rate)
 
-            loss = sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / loss_sum
-            acc = sum([self.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+            loss = (
+                sum([loss_function(X_dev[i], D_dev[i]) for i in range(len(X_dev))])
+                / loss_sum
+            )
+            acc = sum(
+                [self.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]
+            ) / len(X_dev)
 
             if log:
                 stdout.write("\tepoch done in %.02f seconds" % (time.time() - t0))
@@ -367,7 +440,11 @@ class Runner(object):
             else:
                 min_change_count = 0
             if min_change_count > 2:
-                print("\n\ntraining finished after {0} epochs due to minimal change in loss".format(epoch + 1))
+                print(
+                    "\n\ntraining finished after {0} epochs due to minimal change in loss".format(
+                        epoch + 1
+                    )
+                )
                 break
 
             prev_loss = loss
@@ -375,25 +452,33 @@ class Runner(object):
         t = time.time() - t_start
 
         if min_change_count <= 2:
-            print("\n\ntraining finished after reaching maximum of {0} epochs".format(epochs))
-        print("best observed loss was {0}, acc {1}, at epoch {2}".format(best_loss, best_acc, (best_epoch + 1)))
+            print(
+                "\n\ntraining finished after reaching maximum of {0} epochs".format(
+                    epochs
+                )
+            )
+        print(
+            "best observed loss was {0}, acc {1}, at epoch {2}".format(
+                best_loss, best_acc, (best_epoch + 1)
+            )
+        )
 
         print("setting U, V, W to matrices from best epoch")
         self.model.set_best_params()
 
         return best_loss
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     mode = sys.argv[1].lower()
     data_folder = sys.argv[2]
     np.random.seed(2018)
 
     if mode == "train-lm-rnn":
-        '''
+        """
         code for training language model.
         change this to different values, or use it to get you started with your own testing class
-        '''
+        """
         train_size = 1000
         dev_size = 1000
         vocab_size = 2000
@@ -403,23 +488,29 @@ if __name__ == "__main__":
         lr = float(sys.argv[5])
 
         # get the data set vocabulary
-        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-                              names=['count', 'freq'], )
+        vocab = pd.read_table(
+            data_folder + "/vocab.wiki.txt",
+            header=None,
+            sep="\s+",
+            index_col=0,
+            names=["count", "freq"],
+        )
         num_to_word = dict(enumerate(vocab.index[:vocab_size]))
         word_to_num = invert_dict(num_to_word)
 
         # calculate loss vocabulary words due to vocab_size
         fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
         print(
-            "Retained %d words from %d (%.02f%% of all tokens)\n" % (
-            vocab_size, len(vocab), 100 * (1 - fraction_lost)))
+            "Retained %d words from %d (%.02f%% of all tokens)\n"
+            % (vocab_size, len(vocab), 100 * (1 - fraction_lost))
+        )
 
-        docs = load_lm_dataset(data_folder + '/wiki-train.txt')
+        docs = load_lm_dataset(data_folder + "/wiki-train.txt")
         S_train = docs_to_indices(docs, word_to_num, 1, 1)
         X_train, D_train = seqs_to_lmXY(S_train)
 
         # Load the dev set (for tuning hyperparameters)
-        docs = load_lm_dataset(data_folder + '/wiki-dev.txt')
+        docs = load_lm_dataset(data_folder + "/wiki-dev.txt")
         S_dev = docs_to_indices(docs, word_to_num, 1, 1)
         X_dev, D_dev = seqs_to_lmXY(S_dev)
 
@@ -443,10 +534,10 @@ if __name__ == "__main__":
         print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
 
     if mode == "train-np-rnn":
-        '''
+        """
         starter code for parameter estimation.
         change this to different values, or use it to get you started with your own testing class
-        '''
+        """
         train_size = 1000
         dev_size = 1000
         vocab_size = 2000
@@ -456,19 +547,25 @@ if __name__ == "__main__":
         lr = float(sys.argv[5])
 
         # get the data set vocabulary
-        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-                              names=['count', 'freq'], )
+        vocab = pd.read_table(
+            data_folder + "/vocab.wiki.txt",
+            header=None,
+            sep="\s+",
+            index_col=0,
+            names=["count", "freq"],
+        )
         num_to_word = dict(enumerate(vocab.index[:vocab_size]))
         word_to_num = invert_dict(num_to_word)
 
         # calculate loss vocabulary words due to vocab_size
         fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
         print(
-            "Retained %d words from %d (%.02f%% of all tokens)\n" % (
-            vocab_size, len(vocab), 100 * (1 - fraction_lost)))
+            "Retained %d words from %d (%.02f%% of all tokens)\n"
+            % (vocab_size, len(vocab), 100 * (1 - fraction_lost))
+        )
 
         # load training data
-        sents = load_np_dataset(data_folder + '/wiki-train.txt')
+        sents = load_np_dataset(data_folder + "/wiki-train.txt")
         S_train = docs_to_indices(sents, word_to_num, 0, 0)
         X_train, D_train = seqs_to_npXY(S_train)
 
@@ -476,7 +573,7 @@ if __name__ == "__main__":
         Y_train = D_train[:train_size]
 
         # load development data
-        sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        sents = load_np_dataset(data_folder + "/wiki-dev.txt")
         S_dev = docs_to_indices(sents, word_to_num, 0, 0)
         X_dev, D_dev = seqs_to_npXY(S_dev)
 
@@ -487,15 +584,15 @@ if __name__ == "__main__":
         # --- your code here --- #
         ##########################
 
-        acc = 0.
+        acc = 0.0
 
         print("Accuracy: %.03f" % acc)
 
     if mode == "train-np-gru":
-        '''
+        """
         starter code for parameter estimation.
         change this to different values, or use it to get you started with your own testing class
-        '''
+        """
         train_size = 10000
         dev_size = 1000
         vocab_size = 2000
@@ -505,19 +602,25 @@ if __name__ == "__main__":
         lr = float(sys.argv[5])
 
         # get the data set vocabulary
-        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-                              names=['count', 'freq'], )
+        vocab = pd.read_table(
+            data_folder + "/vocab.wiki.txt",
+            header=None,
+            sep="\s+",
+            index_col=0,
+            names=["count", "freq"],
+        )
         num_to_word = dict(enumerate(vocab.index[:vocab_size]))
         word_to_num = invert_dict(num_to_word)
 
         # calculate loss vocabulary words due to vocab_size
         fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
         print(
-            "Retained %d words from %d (%.02f%% of all tokens)\n" % (
-            vocab_size, len(vocab), 100 * (1 - fraction_lost)))
+            "Retained %d words from %d (%.02f%% of all tokens)\n"
+            % (vocab_size, len(vocab), 100 * (1 - fraction_lost))
+        )
 
         # load training data
-        sents = load_np_dataset(data_folder + '/wiki-train.txt')
+        sents = load_np_dataset(data_folder + "/wiki-train.txt")
         S_train = docs_to_indices(sents, word_to_num, 0, 0)
         X_train, D_train = seqs_to_npXY(S_train)
 
@@ -525,7 +628,7 @@ if __name__ == "__main__":
         Y_train = D_train[:train_size]
 
         # load development data
-        sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        sents = load_np_dataset(data_folder + "/wiki-dev.txt")
         S_dev = docs_to_indices(sents, word_to_num, 0, 0)
         X_dev, D_dev = seqs_to_npXY(S_dev)
 
@@ -536,6 +639,6 @@ if __name__ == "__main__":
         # --- your code here --- #
         ##########################
 
-        acc = 0.
+        acc = 0.0
 
         print("Accuracy: %.03f" % acc)
