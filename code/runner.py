@@ -3,6 +3,7 @@ import sys
 import time
 from sys import stdout
 
+import numpy as np
 from gru import GRU
 from model import Model
 from rnn import RNN
@@ -39,10 +40,10 @@ class Runner(object):
 
         return loss		the combined loss for all words
         """
-
         loss = 0.0
-        self.model.predict(x)
-
+        y, s = Model.predict(x)
+        for i in range(len(y)):
+            loss += -1 * np.sum(np.log(d[i] * np.log(y[i])))
         return loss
 
     def compute_loss_np(self, x, d):
@@ -56,12 +57,10 @@ class Runner(object):
 
         return loss		we only take the prediction from the last time step
         """
-
         loss = 0.0
-
-        ##########################
-        # --- your code here --- #
-        ##########################
+        y = Model.predict(x)  # return prediction from model
+        for i in range(len(y)):
+            loss += -1 * np.sum(np.log(d[i] * np.log(y[i])))
 
         return loss
 
@@ -75,10 +74,7 @@ class Runner(object):
 
         return 1 if argmax(y[t]) == d[0], 0 otherwise
         """
-
-        ##########################
-        # --- your code here --- #
-        ##########################
+        y = Model.predict(x)
 
         return 0
 
@@ -91,13 +87,11 @@ class Runner(object):
 
         return mean_loss		average loss over all words in D
         """
-
+        x_pred = Model.predict(X)
         mean_loss = 0.0
-
-        ##########################
-        # --- your code here --- #
-        ##########################
-
+        for i in range(len(x_pred)):  # loss for each output
+            loss = loss + (-1 * D[i] * np.log(x_pred[i]))
+        mean_loss = np.mean(loss)
         return mean_loss
 
     def train(

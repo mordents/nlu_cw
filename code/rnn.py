@@ -128,14 +128,22 @@ class RNN(Model):
         s		predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
                         should be part of the return value of predict(x)
         steps	number of time steps to go back in BPTT
-
         no return values
         """
 
-        for t in reversed(range(len(x))):
-            ##########################
-            # --- your code here --- #
-            ##########################
+        y = Model.predict(x)
+        # learning_rate = Runner(Model).train()
+        for t in reversed(
+            range(len(x))
+        ):  # in order V, W , U going BACK through the network
+            # in_derv = np.transpose(self.W, out_derv) *   # in params#
+            # learning_rate * sum(derivative_in)
+
+            # change_in_W = learning_rate * np.cross(sum(out_derv), s[x][t])
+
+            # out_derv = (d[x][t] - y[x][t]) * (netout)  # out part
+            # np.cross(sum_V, x[t])  # change in V pseudocode
+
             pass
 
     def acc_deltas_bptt_np(self, x, d, y, s, steps):
